@@ -453,6 +453,7 @@ const Orders = ({ metamaskConnection }) => {
                 onClick={() =>
                   claimActionSeller(record.pendingId, currentAddress)
                 }
+                disabled={Date.now() / 1000 > record.confirmedTime + 24*60*60}
                 type="primary"
               >
                 Claim (Seller)

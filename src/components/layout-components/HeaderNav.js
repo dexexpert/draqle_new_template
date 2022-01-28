@@ -24,7 +24,6 @@ import {
   SIDE_NAV_WIDTH,
 } from "constants/ThemeConstant";
 import utils from "utils";
-
 const Web3 = require("web3");
 
 const ethEnabled = async () => {
@@ -42,6 +41,22 @@ const getAccount = async () => {
   account = accounts[0];
   return account;
 };
+
+async function checkIfWalletIsConnected(onConnected) {
+  if (window.ethereum) {
+    const accounts = await window.ethereum.request({
+      method: "eth_accounts",
+    });
+
+    if (accounts.length > 0) {
+      const account = accounts[0];
+      return account;
+    }
+    return null;
+  }
+  return null;
+}
+
 const { Header } = Layout;
 
 export const HeaderNav = (props) => {
@@ -91,6 +106,13 @@ export const HeaderNav = (props) => {
     console.log("metamask connection nav", res);
   };
 
+  const onClickDisconnectMetamask = async () => {
+    console.log("Disconnecting wallet from App...");
+    onMetamaskConnect(false);
+    setMetamaskConnected(false);
+    setCurrentMetamaskAddress("");
+  };
+
   const isNavTop = navType === NAV_TYPE_TOP ? true : false;
   const mode = () => {
     if (!headerNavColor) {
@@ -117,6 +139,16 @@ export const HeaderNav = (props) => {
       onSearchClose();
     }
   });
+
+  useEffect(() => {
+    async function checkWallet() {
+      const res = await checkIfWalletIsConnected();
+      if (res !== null) {
+        onClickMetamask();
+      }
+    }
+    checkWallet();
+  }, []);
 
   return (
     <Header
@@ -164,11 +196,21 @@ export const HeaderNav = (props) => {
           <div className="nav-right">
             <div className="nav-center">
               {metamaskConnected === true ? (
-                <Button type="ghost" disabled={true}>
-                  {curMetamaskAddress.slice(0, 5) +
-                    "..." +
-                    curMetamaskAddress.slice(-5)}
-                </Button>
+                <div className="mb-3">
+                  <Button className="mb-2" type="ghost" disabled={true}>
+                    {curMetamaskAddress.slice(0, 5) +
+                      "..." +
+                      curMetamaskAddress.slice(-5)}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      onClickDisconnectMetamask();
+                    }}
+                    type="danger"
+                  >
+                    Disconnect
+                  </Button>
+                </div>
               ) : (
                 <Button
                   type="primary"
@@ -180,7 +222,6 @@ export const HeaderNav = (props) => {
                 </Button>
               )}
             </div>
-            <NavPanel direction={direction} />
           </div>
           <NavSearch active={searchActive} close={onSearchClose} />
         </div>

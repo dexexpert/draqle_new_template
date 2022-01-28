@@ -197,6 +197,8 @@ const Admin = ({ metamaskConnection }) => {
       .refundByAdminToSeller(pendingId)
       .send({ from: cur_Account.toString() })
       .then((res) => {
+        
+        setDataChanged(true);
         console.log(res);
       })
       .catch((err) => {
@@ -211,6 +213,7 @@ const Admin = ({ metamaskConnection }) => {
       .refundByAdminToBuyer(pendingId)
       .send({ from: cur_Account.toString() })
       .then((res) => {
+        setDataChanged(true);
         console.log(res);
       })
       .catch((err) => {
@@ -331,7 +334,8 @@ const Admin = ({ metamaskConnection }) => {
           ownerAddress.toString().toUpperCase() ===
           currentAddress.toString().toUpperCase();
         let showButton = null;
-        if (record.disputedBySeller === true) {
+        if (record.refundedBySeller === true) {
+        } else if (record.disputedBySeller === true) {
           if (urAdmin) {
             showButton = (
               <>
@@ -362,6 +366,7 @@ const Admin = ({ metamaskConnection }) => {
                   onClick={() =>
                     refundActionBuyer(record.pendingId, currentAddress)
                   }
+                  disabled={true}
                   type="danger"
                 >
                   Refund to Buyer(Admin)
