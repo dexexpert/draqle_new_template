@@ -144,6 +144,30 @@ const Admin = ({ metamaskConnection }) => {
   const [currentAddress, setCurrentAddress] = useState("");
   const [ownerAddress, setOwnerAddress] = useState("");
   const [dataChanged, setDataChanged] = useState(false);
+  let pendingLoaded = true;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (metamaskConnection === true && pendingLoaded === true) {
+        async function getAllPendings() {
+          pendingLoaded = false;
+          const isMetamask = await ethEnabled();
+          if (isMetamask == false) {
+            alert("You should install metamask");
+            return;
+          }
+          const currentAccountAddress = await getAccount();
+          setCurrentAddress(currentAccountAddress);
+          const owner = await getOwnerAddress();
+          setOwnerAddress(owner);
+          const pendings = await getPendingLogs();
+          setList(pendings);
+        }
+        getAllPendings();
+        pendingLoaded = true;
+      }
+    }, 10000);
+  }, []);
 
   useEffect(() => {
     if (metamaskConnection === true) {
@@ -161,12 +185,16 @@ const Admin = ({ metamaskConnection }) => {
         const pendings = await getPendingLogs();
         setList(pendings);
 
+        pendingLoaded = true;
         setToggleLoading(false);
       }
       getAllPendings();
     }
   }, [metamaskConnection]);
-
+  window.ethereum.on("accountsChanged", function (accounts) {
+    console.log("account changed");
+    setDataChanged(true);
+  });
   useEffect(() => {
     async function getAllPendings() {
       setToggleLoading(true);
@@ -182,6 +210,7 @@ const Admin = ({ metamaskConnection }) => {
       const pendings = await getPendingLogs();
       setList(pendings);
 
+      pendingLoaded = true;
       setToggleLoading(false);
     }
     if (dataChanged === true) {
@@ -197,7 +226,6 @@ const Admin = ({ metamaskConnection }) => {
       .refundByAdminToSeller(pendingId)
       .send({ from: cur_Account.toString() })
       .then((res) => {
-        
         setDataChanged(true);
         console.log(res);
       })

@@ -128,11 +128,31 @@ const Orders = ({ metamaskConnection }) => {
   const [loading, setToggleLoading] = useState(false);
   const [currentAddress, setCurrentAddress] = useState("");
   const [dataChanged, setDataChanged] = useState(false);
-
-  useEffect(() => {}, []);
+  let pendingLoaded = true;
 
   useEffect(() => {
-    if (metamaskConnection === true) {
+    const interval = setInterval(() => {
+      if (metamaskConnection === true && pendingLoaded === true) {
+        async function getAllPendings() {
+          pendingLoaded = false;
+          const isMetamask = await ethEnabled();
+          if (isMetamask == false) {
+            alert("You should install metamask");
+            return;
+          }
+          const currentAccountAddress = await getAccount();
+          setCurrentAddress(currentAccountAddress);
+          const pendings = await getPendingLogs();
+          setList(pendings);
+          pendingLoaded = true;
+        }
+        getAllPendings();
+      }
+    }, 10000);
+  }, []);
+
+  useEffect(() => {
+    if (metamaskConnection === true && pendingLoaded === true) {
       async function getAllPendings() {
         setToggleLoading(true);
         const isMetamask = await ethEnabled();
@@ -144,6 +164,7 @@ const Orders = ({ metamaskConnection }) => {
         setCurrentAddress(currentAccountAddress);
         const pendings = await getPendingLogs();
         setList(pendings);
+        pendingLoaded = true;
 
         setToggleLoading(false);
       }
@@ -151,6 +172,10 @@ const Orders = ({ metamaskConnection }) => {
     }
   }, [metamaskConnection]);
 
+  window.ethereum.on("accountsChanged", function (accounts) {
+    console.log("account changed");
+    setDataChanged(true);
+  });
   useEffect(() => {
     async function getAllPendings() {
       setToggleLoading(true);
@@ -163,10 +188,11 @@ const Orders = ({ metamaskConnection }) => {
       setCurrentAddress(currentAccountAddress);
       const pendings = await getPendingLogs();
       setList(pendings);
+      pendingLoaded = true;
 
       setToggleLoading(false);
     }
-    if (dataChanged === true) {
+    if (dataChanged === true && pendingLoaded === true) {
       getAllPendings();
       setDataChanged(false);
     }
@@ -453,7 +479,9 @@ const Orders = ({ metamaskConnection }) => {
                 onClick={() =>
                   claimActionSeller(record.pendingId, currentAddress)
                 }
-                disabled={Date.now() / 1000 > record.confirmedTime + 24*60*60}
+                disabled={
+                  Date.now() / 1000 > record.confirmedTime + 24 * 60 * 60
+                }
                 type="primary"
               >
                 Claim (Seller)

@@ -258,9 +258,14 @@ const ProductList = ({ metamaskConnection }) => {
         gas: 3000000,
         value: priceOfProduct,
       })
-      .then((res) => console.log(res))
-      .catch((err) => console.log(err));
-    setToggleLoading(false);
+      .then((res) => {
+        console.log(res);
+        setToggleLoading(false);
+      })
+      .catch((err) => {
+        console.log(err);
+        setToggleLoading(false);
+      });
   };
 
   const tableColumns = [
